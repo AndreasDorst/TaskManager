@@ -8,5 +8,9 @@ venv/
 # Logs
 *.log
 
-# Pytest cache
+# Cache
+__pycache__
 .pytest_cache/
+
+# Data
+tasks.json
