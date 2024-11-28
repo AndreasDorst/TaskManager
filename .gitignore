@@ -1,0 +1,12 @@
+# Virtual environments
+.venv/
+venv/
+
+# IDEs and text editors
+.vscode/
+
+# Logs
+*.log
+
+# Pytest cache
+.pytest_cache/
