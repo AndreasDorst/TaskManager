@@ -374,19 +374,82 @@ class MenuHandler:
 
     def search_task_menu(self):
         """
-        Меню поиска задач по ключевому слову.
+        Меню поиска задач по ключевому слову, категории или статусу.
 
         :return: Главное меню после поиска.
         """
-        print("\nПоиск задач:")
-        keyword = input("Введите ключевое слово для поиска: ")
-        tasks = [task for task in self.manager.tasks if keyword.lower() in task.title.lower()]
-        if tasks:
-            self.manager.show_tasks(tasks)
-        else:
-            print("Задачи не найдены.")
-        input("\nНажмите Enter для возврата в меню.")
-        return "main_menu"
+        while True:
+            print("\nПоиск задач:")
+            print("1. Поиск по ключевому слову в названии задачи")
+            print("2. Поиск по категории")
+            print("3. Поиск по статусу выполнения")
+            print("4. Назад")
+            choice = input("\nВыберите действие: ")
+
+            if choice == "1":
+                keyword = input("Введите ключевое слово для поиска: ")
+                tasks = [task for task in self.manager.tasks if keyword.lower() in task.title.lower()]
+                if tasks:
+                    self.manager.show_tasks(tasks)
+                else:
+                    print("Задачи не найдены по ключевому слову.")
+                input("\nНажмите Enter для возврата в меню поиска.")
+
+            elif choice == "2":
+                categories = {task.category for task in self.manager.tasks}
+                if not categories:
+                    print("Категории отсутствуют.")
+                else:
+                    print("\nКатегории:")
+                    # Выводим категории с номерами
+                    category_list = list(categories)
+                    for idx, category in enumerate(category_list, start=1):
+                        print(f"{idx}. {category}")
+
+                    # Получаем ввод пользователя
+                    category_input = input("\nВведите категорию для поиска или номер категории: ")
+
+                    # Проверка, если введен номер категории
+                    if category_input.isdigit() and 0 < int(category_input) <= len(category_list):
+                        selected_category = category_list[int(category_input) - 1]
+                    else:
+                        selected_category = category_input.strip()
+
+                    # Фильтрация задач по выбранной категории
+                    tasks = [task for task in self.manager.tasks if task.category.lower() == selected_category.lower()]
+                    if tasks:
+                        self.manager.show_tasks(tasks)  # Выводим задачи по выбранной категории
+                    else:
+                        print("Задачи не найдены по выбранной категории.")
+                input("\nНажмите Enter для возврата в меню поиска.")
+
+            elif choice == "3":
+                # Предоставим пользователю выбор статуса
+                print("\nСтатусы задач:")
+                print("1. Не выполнена")
+                print("2. Выполнена")
+                status_choice = input("Выберите статус для поиска (1 или 2): ")
+
+                if status_choice == "1":
+                    status = "Не выполнена"
+                elif status_choice == "2":
+                    status = "Выполнена"
+                else:
+                    print("Неверный выбор. Попробуйте снова.")
+                    continue
+
+                tasks = [task for task in self.manager.tasks if task.status.lower() == status.lower()]
+                if tasks:
+                    self.manager.show_tasks(tasks)  # Выводим задачи с выбранным статусом
+                else:
+                    print(f"Задачи со статусом '{status}' не найдены.")
+                input("\nНажмите Enter для возврата в меню поиска.")
+
+            elif choice == "4":
+                return "main_menu"
+
+            else:
+                print("Неверный выбор. Попробуйте снова.")
 
 
 def main():
