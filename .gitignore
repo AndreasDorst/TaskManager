@@ -4,6 +4,7 @@ venv/
 
 # IDEs and text editors
 .vscode/
+.idea
 
 # Logs
 *.log

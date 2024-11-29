@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "title": "Task 1",
+        "description": "Description",
+        "category": "Category1",
+        "due_date": "2024-12-31",
+        "priority": "Средний",
+        "status": "Не выполнена"
+    },
+    {
+        "id": 2,
+        "title": "Task 2",
+        "description": "Description",
+        "category": "Category2",
+        "due_date": "2024-12-31",
+        "priority": "Низкий",
+        "status": "Не выполнена"
+    }
+]
