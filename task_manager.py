@@ -4,40 +4,7 @@ from tabulate import tabulate
 
 
 class Task:
-    """
-    Класс для представления задачи.
-
-    Атрибуты:
-        id (int): Идентификатор задачи.
-        Title (str): Название задачи.
-        Description (str): Описание задачи.
-        Category (str): Категория задачи.
-        Due_date (str): Срок выполнения задачи.
-        Priority (str): Приоритет задачи.
-        Status (str): Статус задачи (по умолчанию "Не выполнена").
-    """
-
-    def __init__(
-            self,
-            task_id,
-            title,
-            description,
-            category,
-            due_date,
-            priority,
-            status="Не выполнена",
-    ):
-        """
-        Инициализация объекта задачи.
-
-        :param task_id: Идентификатор задачи.
-        :param title: Название задачи.
-        :param description: Описание задачи.
-        :param category: Категория задачи.
-        :param due_date: Срок выполнения задачи.
-        :param priority: Приоритет задачи.
-        :param status: Статус задачи (по умолчанию "Не выполнена").
-        """
+    def __init__(self, task_id, title, description, category, due_date, priority, status="Не выполнена"):
         self.id = task_id
         self.title = title
         self.description = description
@@ -47,26 +14,9 @@ class Task:
         self.status = status
 
     def mark_as_done(self):
-        """
-        Отметить задачу как выполненную.
-
-        :return: None
-        """
         self.status = "Выполнена"
 
-    def edit(
-            self, title=None, description=None, category=None, due_date=None, priority=None
-    ):
-        """
-        Редактировать задачу.
-
-        :param title: Новое название задачи.
-        :param description: Новое описание задачи.
-        :param category: Новая категория задачи.
-        :param due_date: Новый срок выполнения задачи.
-        :param priority: Новый приоритет задачи.
-        :return: None
-        """
+    def edit(self, title=None, description=None, category=None, due_date=None, priority=None):
         if title:
             self.title = title
         if description:
@@ -78,15 +28,7 @@ class Task:
         if priority:
             self.priority = priority
 
-    def mark_as_done(self):
-        self.status = "Выполнена"
-
     def to_dict(self):
-        """
-        Преобразовать задачу в словарь.
-
-        :return: Словарь, представляющий задачу.
-        """
         return {
             "id": self.id,
             "title": self.title,
@@ -99,12 +41,6 @@ class Task:
 
     @staticmethod
     def from_dict(data):
-        """
-        Создать объект задачи из словаря.
-
-        :param data: Словарь, содержащий данные задачи.
-        :return: Объект задачи.
-        """
         return Task(
             task_id=data["id"],
             title=data["title"],
@@ -117,532 +53,243 @@ class Task:
 
 
 class TaskManager:
-    """
-    Менеджер задач, который управляет списком задач и выполняет операции с ними.
-
-    Атрибуты:
-        file_name (str): Имя файла для хранения данных задач.
-        Tasks (list): Список объектов задач.
-    """
-
     def __init__(self, file_name="tasks.json"):
-        """
-        Инициализация менеджера задач.
-
-        :param file_name: Имя файла для хранения задач (по умолчанию "tasks.json").
-        """
         self.file_name = file_name
         self.tasks = self.load_tasks()
 
     def load_tasks(self):
-        """
-        Загрузить задачи из файла.
-
-        :return: Список задач, загруженных из файла.
-        """
         if os.path.exists(self.file_name):
             with open(self.file_name, "r", encoding="utf-8") as file:
                 return [Task.from_dict(task) for task in json.load(file)]
         return []
 
     def save_tasks(self):
-        """
-        Сохранить задачи в файл.
-
-        :return: None
-        """
         with open(self.file_name, "w", encoding="utf-8") as file:
-            json.dump(
-                [task.to_dict() for task in self.tasks],
-                file,
-                ensure_ascii=False,
-                indent=4,
-            )
+            json.dump([task.to_dict() for task in self.tasks], file, ensure_ascii=False, indent=4)
+
+    def add_task(self, title, description, category, due_date, priority):
+        new_id = max((task.id for task in self.tasks), default=0) + 1
+        new_task = Task(new_id, title, description, category, due_date, priority)
+        self.tasks.append(new_task)
+        self.save_tasks()
 
     def get_task_by_id(self, task_id):
-        """
-        Получить задачу по ID.
-
-        :param task_id: Идентификатор задачи.
-        :return: Задача с данным ID или None, если задача не найдена.
-        """
-        for task in self.tasks:
-            if task.id == task_id:
-                return task
-        return None
+        return next((task for task in self.tasks if task.id == task_id), None)
 
     def show_tasks(self, tasks=None):
-        """
-        Вывести список задач в виде таблицы.
-
-        :param tasks: Список задач для отображения. Если не передано, выводятся все задачи.
-        :return: None
-        """
         if not tasks:
             tasks = self.tasks
-
-        task = tasks[0]
+        if not tasks:
+            print("Список задач пуст.")
+            return
         table = [
-            [
-                task.id,
-                task.title,
-                task.category,
-                task.due_date,
-                task.priority,
-                task.status,
-            ]
+            [task.id, task.title, task.category, task.due_date, task.priority, task.status]
             for task in tasks
         ]
         headers = ["ID", "Название", "Категория", "Срок", "Приоритет", "Статус"]
-
         print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
-class ViewTasks:
-    """
-    Класс для отображения задач.
-
-    Атрибуты:
-        manager (TaskManager): Менеджер задач.
-    """
-
-    def __init__(self, manager):
-        """
-        Инициализация класса просмотра задач.
-
-        :param manager: Менеджер задач.
-        """
-        self.manager = manager
-
-    def execute(self):
-        while True:  # Цикл для повторного отображения меню
-            print("\n1. Просмотр всех задач")
-            print("2. Просмотр задач по категориям")
-            print("3. Выход в главное меню\n")
-            choice = input("Выберите опцию: ")
-
-            match choice:
-                case "1":
-                    self.manager.show_tasks()  # Показать все задачи
-                    input("\nНажмите Enter для возврата в подменю...")
-                case "2":
-                    self.view_tasks_by_category()  # Показать задачи по категории
-                    input("\nНажмите Enter для возврата в подменю...")
-                case "3":
-                    print("Выход в главное меню...")
-                    return  # Возврат в главное меню
-                case _:
-                    print("Неверный выбор! Попробуйте снова.")
-
-    def view_tasks_by_category(self):
-        """
-        Показать задачи по категориям.
-
-        :return: None
-        """
-        categories = {task.category for task in self.manager.tasks}
-        if categories:
-            # Нумерация категорий
-            print("\nДоступные категории:\n")
-            for idx, category in enumerate(categories, start=1):
-                print(f"{idx}. {category}")
-            category_choice = input(
-                "\nВведите категорию или номер (или Enter для отмены): "
-            )
-            if category_choice:
-                # Проверка выбора по номеру или строке
-                category = (
-                    list(categories)[int(category_choice) - 1]
-                    if category_choice.isdigit()
-                       and 0 < int(category_choice) <= len(categories)
-                    else category_choice
-                )
-                tasks_in_category = [
-                    task
-                    for task in self.manager.tasks
-                    if task.category.lower() == category.lower()
-                ]
-                if tasks_in_category:
-                    self.manager.show_tasks(
-                        tasks_in_category
-                    )  # Показать задачи по категории
-                else:
-                    print("Задачи не найдены в выбранной категории.")
-            else:
-                print("Отмена просмотра.")
-        else:
-            print("Нет доступных категорий.")
-
-
-class AddTask:
-    """
-    Класс для добавления новой задачи.
-
-    Атрибуты:
-        manager (TaskManager): Менеджер задач.
-    """
-
-    def __init__(self, manager):
-        """
-        Инициализация класса добавления задачи.
-
-        :param manager: Менеджер задач.
-        """
-        self.manager = manager
-
-    def execute(self):
-        """
-        Добавить новую задачу.
-
-        :return: None
-        """
-        title = input("\nНазвание задачи: ")
-        description = input("Описание задачи: ")
-        category = input("Категория: ")
-        due_date = input("Срок выполнения (гггг-мм-дд): ")
-        priority = input("Приоритет (низкий, средний, высокий): ")
-
-        # Добавляем задачу через менеджер
-        self.manager.add_task(title, description, category, due_date, priority)
-        print("Задача добавлена!")
-
-
-class EditTask:
+class MenuHandler:
     def __init__(self, manager):
         self.manager = manager
+        self.menus = {
+            "main_menu": self.main_menu,
+            "view_tasks": self.view_tasks_menu,
+            "add_task": self.add_task_menu,
+            "edit_task": self.edit_task_menu,
+            "delete_task": self.delete_task_menu,
+            "search_task": self.search_task_menu,
+        }
 
     def execute(self):
-        # Ввод ID задачи для редактирования
-        while True:
-            task_id_input = input("\nID задачи для редактирования: ")
+        current_menu = "main_menu"
+        while current_menu:
+            current_menu = self.menus[current_menu]()
 
-            # Валидация: проверяем, является ли введённое значение числом
-            if not task_id_input.isdigit():
-                print("Ошибка: ID должен быть числом.")
-                continue  # Запрашиваем ID снова, если введено не число
-
-            task_id = int(task_id_input)
-
-            # Проверяем, существует ли задача с таким ID
-            task = self.manager.get_task_by_id(task_id)
-            if not task:
-                print(f"Задача с ID {task_id} не найдена.")
-                continue  # Запрашиваем ID снова, если задача не найдена
-
-            break  # Выход из цикла, если ID валидный и задача найдена
-
-        # Подменю для изменения задачи
-        while True:
-            print("\n1. Просмотр текущих данных задачи")
-            print("2. Отметить задачу как выполненную")
-            print("3. Изменить задачу")
-            print("4. Назад\n")
-            choice = input("Выберите действие: ")
-
-            match choice:
-                case "1":
-                    # Вывод текущих данных задачи в виде таблицы
-                    print("Текущие данные задачи:")
-                    self.manager.show_tasks([task])
-                case "2":
-                    # Отметить задачу как выполненную
-                    task.mark_as_done()
-                    self.manager.save_tasks()
-                    print("Задача отмечена как выполненная!")
-                case "3":
-                    # Редактирование задачи
-                    title = input(
-                        "Новое название (оставьте пустым для без изменений): "
-                    )
-                    description = input(
-                        "Новое описание (оставьте пустым для без изменений): "
-                    )
-                    category = input(
-                        "Новая категория (оставьте пустым для без изменений): "
-                    )
-                    due_date = input(
-                        "Новый срок выполнения (оставьте пустым для без изменений): "
-                    )
-                    priority = input(
-                        "Новый приоритет (оставьте пустым для без изменений): "
-                    )
-
-                    # Редактируем задачу, если введены новые данные
-                    task.edit(title, description, category, due_date, priority)
-
-                    # Сохраняем изменения
-                    self.manager.save_tasks()
-                    print("Задача обновлена!")
-                case "4":
-                    # Выход из подменю
-                    print("Возвращаемся в главное меню...")
-                    return  # Выход в главное меню
-                case _:
-                    print(
-                        "Неверный выбор! Пожалуйста, выберите один из предложенных вариантов."
-                    )
-
-
-class MarkTaskDone:
-    def __init__(self, manager):
-        self.manager = manager
-
-    def execute(self):
-        task_id_input = input("ID задачи для отметки как выполненной: ")
-
-        # Валидация: проверяем, является ли введённое значение числом
-        if not task_id_input.isdigit():
-            print("Ошибка: ID должен быть числом.")
-            return
-
-        task_id = int(task_id_input)
-
-        # Проверяем, существует ли задача с таким ID
-        task = self.manager.get_task_by_id(task_id)
-        if not task:
-            print(f"Задача с ID {task_id} не найдена.")
-            return
-
-        # Отмечаем задачу как выполненную
-        task.mark_as_done()
-
-        # Сохраняем изменения
-        self.manager.save_tasks()
-        print("Задача отмечена как выполненная!")
-
-
-class DeleteTask:
-    def __init__(self, manager):
-        self.manager = manager
-
-    def execute(self):
-        while (
-                True
-        ):  # Повторяем меню удаления до тех пор, пока не выберется правильное действие
-            print("\n1. Удаление задачи по ID")
-            print("2. Удаление задач по категории")
-            print("3. Удаление всех задач")
-            print("4. Отмена (вернуться в главное меню)\n")
-            choice = input("Выберите опцию: ")
-
-            match choice:
-                case "1":
-                    task_id = input(
-                        "Введите ID задачи для удаления (или Enter для отмены): "
-                    )
-                    if task_id:
-                        task = self.manager.get_task_by_id(int(task_id))
-                        if task:
-                            confirmation = input(
-                                f"Вы уверены, что хотите удалить задачу с ID {task_id}? (да/нет): "
-                            )
-                            if confirmation.lower() == "да":
-                                self.manager.tasks.remove(task)
-                                self.manager.save_tasks()
-                                print("Задача удалена!")
-                            else:
-                                print("Удаление отменено.")
-                        else:
-                            print("Задача не найдена.")
-                    else:
-                        print("Отмена удаления.")
-                case "2":
-                    categories = {task.category for task in self.manager.tasks}
-                    if categories:
-                        # Нумерация категорий
-                        print("\nДоступные категории для удаления:\n")
-                        for idx, category in enumerate(categories, start=1):
-                            print(f"{idx}. {category}")
-                        category_choice = input(
-                            "\nВведите категорию или номер (или Enter для отмены): "
-                        )
-                        if category_choice:
-                            # Проверка выбора по номеру или строке
-                            category = (
-                                list(categories)[int(category_choice) - 1]
-                                if category_choice.isdigit()
-                                   and 0 < int(category_choice) <= len(categories)
-                                else category_choice
-                            )
-                            tasks_in_category = [
-                                task
-                                for task in self.manager.tasks
-                                if task.category.lower() == category.lower()
-                            ]
-                            if tasks_in_category:
-                                confirmation = input(
-                                    f"Вы уверены, что хотите удалить все задачи в категории '{category}'? (да/нет): "
-                                )
-                                if confirmation.lower() == "да":
-                                    for task in tasks_in_category:
-                                        self.manager.tasks.remove(task)
-                                    self.manager.save_tasks()
-                                    print(f"Задачи в категории '{category}' удалены!")
-                                else:
-                                    print("Удаление отменено.")
-                            else:
-                                print("Задачи не найдены.")
-                        else:
-                            print("Отмена удаления.")
-                    else:
-                        print("Нет доступных категорий.")
-                case "3":
-                    confirmation = input(
-                        "Вы уверены, что хотите удалить все задачи? (да/нет): "
-                    )
-                    if confirmation.lower() == "да":
-                        self.manager.tasks.clear()
-                        self.manager.save_tasks()
-                        print("Все задачи удалены!")
-                    else:
-                        print("Удаление отменено.")
-                case "4":
-                    print("Возвращаемся в меню удаления задач...")
-                    return  # Возвращение в меню удаления
-
-                case _:
-                    print("Неверный выбор! Попробуйте снова.")
-
-        # Плавный возврат в меню, последовательно
-        return "main_menu"  # Вернем к главному меню
-
-
-class SearchTask:
-    def __init__(self, manager):
-        self.manager = manager
-
-    def search_tasks(self, keyword=None, category=None, status=None):
-        """Поиск задач по ключевому слову, категории или статусу."""
-        result = self.manager.tasks
-
-        if keyword:
-            # Поиск по полному совпадению ключевого слова в title или description
-            result = [
-                task
-                for task in result
-                if keyword.lower() == task.title.lower()
-                   or keyword.lower() == task.description.lower()
-            ]
-
-        if category:
-            result = [
-                task for task in result if category.lower() == task.category.lower()
-            ]
-
-        if status:
-            result = [task for task in result if status.lower() == task.status.lower()]
-
-        return result
-
-    def execute(self):
-        while True:  # Цикл для возврата в подменю
-            print("\n1. Поиск по ключевому слову")
-            print("2. Поиск по категории")
-            print("3. Поиск по статусу")
-            print("4. Вернуться в главное меню")
-            choice = input("\nВыберите опцию: ")
-
-            match choice:
-                case "1":
-                    keyword = input("Введите ключевое слово: ")
-                    result = self.search_tasks(keyword=keyword)
-                    if result:
-                        self.manager.show_tasks(result)
-                    else:
-                        print("Поиск не дал результатов.")
-                case "2":
-                    categories = {task.category for task in self.manager.tasks}
-                    if not categories:
-                        print("Нет доступных категорий!")
-                    else:
-                        print("Доступные категории:")
-                        for idx, category in enumerate(categories, start=1):
-                            print(f"{idx}. {category}")
-                        category_choice = input(
-                            "Введите название категории или номер: "
-                        )
-                        category = (
-                            list(categories)[int(category_choice) - 1]
-                            if category_choice.isdigit()
-                               and 0 < int(category_choice) <= len(categories)
-                            else category_choice
-                        )
-                        result = self.search_tasks(category=category)
-                        if result:
-                            self.manager.show_tasks(result)
-                        else:
-                            print("Поиск не дал результатов.")
-                case "3":
-                    print("1. Выполнена")
-                    print("2. Не выполнена")
-                    status_choice = input("Выберите статус для поиска: ")
-
-                    status = None
-                    match status_choice:
-                        case "1":
-                            status = "Выполнена"
-                        case "2":
-                            status = "Не выполнена"
-                        case _:
-                            print("Неверный выбор!")
-                            continue  # Продолжаем цикл, чтобы снова предложить правильный выбор
-
-                    result = self.search_tasks(status=status)
-                    if result:
-                        self.manager.show_tasks(result)
-                    else:
-                        print("Поиск не дал результатов.")
-                case "4":
-                    print("Возвращаемся в главное меню...")
-                    break  # Выход из подменю и возврат в главное меню
-                case _:
-                    print("Неверный выбор!")
-
-            input("Нажмите Enter для возврата в подменю поиска...")  # Возврат в подменю
-
-
-def main():
-    manager = TaskManager()
-    program_name = r"""
-    ╔════╗╔══╗╔══╗╔╗╔══╗╔╗──╔╗╔══╗╔╗─╔╗╔══╗╔═══╗╔═══╗╔═══╗
-    ╚═╗╔═╝║╔╗║║╔═╝║║║╔═╝║║──║║║╔╗║║╚═╝║║╔╗║║╔══╝║╔══╝║╔═╗║
-    ──║║──║╚╝║║╚═╗║╚╝║──║╚╗╔╝║║╚╝║║╔╗─║║╚╝║║║╔═╗║╚══╗║╚═╝║
-    ──║║──║╔╗║╚═╗║║╔╗║──║╔╗╔╗║║╔╗║║║╚╗║║╔╗║║║╚╗║║╔══╝║╔╗╔╝
-    ──║║──║║║║╔═╝║║║║╚═╗║║╚╝║║║║║║║║─║║║║║║║╚═╝║║╚══╗║║║║─
-    ──╚╝──╚╝╚╝╚══╝╚╝╚══╝╚╝──╚╝╚╝╚╝╚╝─╚╝╚╝╚╝╚═══╝╚═══╝╚╝╚╝─
-
-    """
-
-    actions = {
-        "1": ViewTasks(manager),
-        "2": AddTask(manager),
-        "3": EditTask(manager),
-        "4": DeleteTask(manager),
-        "5": SearchTask(manager),
-    }
-
-    while True:
-        print(program_name)
+    @staticmethod
+    def main_menu():
+        print("\nГлавное меню:")
         print("1. Просмотр задач")
         print("2. Добавить задачу")
         print("3. Изменить задачу")
         print("4. Удалить задачу")
         print("5. Поиск задач")
-        print("6. Выход\n")
+        print("6. Выход")
+        choice = input("\nВыберите действие: ")
 
-        choice = input("Выберите действие: ")
+        match choice:
+            case "1":
+                return "view_tasks"
+            case "2":
+                return "add_task"
+            case "3":
+                return "edit_task"
+            case "4":
+                return "delete_task"
+            case "5":
+                return "search_task"
+            case "6":
+                print("Выход из программы.")
+                return None
+            case _:
+                print("Неверный выбор. Попробуйте снова.")
+                return "main_menu"
 
-        if choice == "6":
-            print("Выход из программы...")
-            break
+    def view_tasks_menu(self):
+        print("\nПросмотр задач:")
+        print("1. Все задачи")
+        print("2. По категории")
+        print("3. Назад")
+        choice = input("\nВыберите действие: ")
 
-        action = actions.get(choice)
-        if action:
-            action.execute()
+        match choice:
+            case "1":
+                self.manager.show_tasks()
+                input("\nНажмите Enter для возврата в меню.")
+                return "view_tasks"
+            case "2":
+                categories = {task.category for task in self.manager.tasks}
+                if not categories:
+                    print("Категории отсутствуют.")
+                else:
+                    print("\nКатегории:")
+                    for idx, category in enumerate(categories, start=1):
+                        print(f"{idx}. {category}")
+                    category = input("\nВведите категорию или номер: ")
+                    selected_category = (
+                        list(categories)[int(category) - 1]
+                        if category.isdigit() and 0 < int(category) <= len(categories)
+                        else category
+                    )
+                    tasks = [task for task in self.manager.tasks if task.category == selected_category]
+                    self.manager.show_tasks(tasks)
+                input("\nНажмите Enter для возврата в меню.")
+                return "view_tasks"
+            case "3":
+                return "main_menu"
+            case _:
+                print("Неверный выбор. Попробуйте снова.")
+                return "view_tasks"
+
+    def add_task_menu(self):
+        print("\nДобавление задачи:")
+        title = input("Название задачи: ")
+        description = input("Описание задачи: ")
+        category = input("Категория задачи: ")
+        due_date = input("Срок выполнения (гггг-мм-дд): ")
+        priority = input("Приоритет задачи (низкий, средний, высокий): ")
+        self.manager.add_task(title, description, category, due_date, priority)
+        print("Задача успешно добавлена!")
+        return "main_menu"
+
+    def edit_task_menu(self):
+        print("\nРедактирование задачи:")
+        task_id = input("Введите ID задачи для редактирования: ")
+        if not task_id.isdigit():
+            print("ID должен быть числом.")
+            return "edit_task"
+        task = self.manager.get_task_by_id(int(task_id))
+        if not task:
+            print("Задача с таким ID не найдена.")
+            return "edit_task"
+
+        print("\n1. Просмотреть задачу")
+        print("2. Изменить задачу")
+        print("3. Отметить как выполненную")
+        print("4. Назад")
+        choice = input("\nВыберите действие: ")
+
+        match choice:
+            case "1":
+                self.manager.show_tasks([task])
+                input("\nНажмите Enter для возврата в меню.")
+                return "edit_task"
+            case "2":
+                title = input("Новое название задачи (оставьте пустым для сохранения текущего): ")
+                description = input("Новое описание задачи (оставьте пустым для сохранения текущего): ")
+                category = input("Новая категория задачи (оставьте пустым для сохранения текущей): ")
+                due_date = input("Новый срок выполнения (оставьте пустым для сохранения текущего): ")
+                priority = input("Новый приоритет задачи (оставьте пустым для сохранения текущего): ")
+                task.edit(title, description, category, due_date, priority)
+                self.manager.save_tasks()
+                print("Задача успешно обновлена.")
+                return "main_menu"
+            case "3":
+                task.mark_as_done()
+                self.manager.save_tasks()
+                print("Задача отмечена как выполненная.")
+                return "main_menu"
+            case "4":
+                return "main_menu"
+            case _:
+                print("Неверный выбор. Попробуйте снова.")
+                return "edit_task"
+
+    def delete_task_menu(self):
+        print("\nУдаление задач:")
+        print("1. Удалить по ID")
+        print("2. Удалить по категории")
+        print("3. Удалить все задачи")
+        print("4. Назад")
+        choice = input("\nВыберите действие: ")
+
+        match choice:
+            case "1":
+                task_id = input("Введите ID задачи для удаления: ")
+                task = self.manager.get_task_by_id(int(task_id))
+                if task:
+                    self.manager.tasks.remove(task)
+                    self.manager.save_tasks()
+                    print("Задача удалена.")
+                else:
+                    print("Задача не найдена.")
+                return "delete_task"
+            case "2":
+                categories = {task.category for task in self.manager.tasks}
+                if not categories:
+                    print("Категории отсутствуют.")
+                else:
+                    print("\nКатегории:")
+                    for idx, category in enumerate(categories, start=1):
+                        print(f"{idx}. {category}")
+                    category = input("\nВведите категорию или номер: ")
+                    selected_category = (
+                        list(categories)[int(category) - 1]
+                        if category.isdigit() and 0 < int(category) <= len(categories)
+                        else category
+                    )
+                    self.manager.tasks = [task for task in self.manager.tasks if task.category != selected_category]
+                    self.manager.save_tasks()
+                    print("Задачи из категории удалены.")
+                return "delete_task"
+            case "3":
+                self.manager.tasks.clear()
+                self.manager.save_tasks()
+                print("Все задачи удалены.")
+                return "delete_task"
+            case "4":
+                return "main_menu"
+            case _:
+                print("Неверный выбор. Попробуйте снова.")
+                return "delete_task"
+
+    def search_task_menu(self):
+        print("\nПоиск задач:")
+        keyword = input("Введите ключевое слово для поиска: ")
+        tasks = [task for task in self.manager.tasks if keyword.lower() in task.title.lower()]
+        if tasks:
+            self.manager.show_tasks(tasks)
         else:
-            print(
-                "Неверный выбор. Пожалуйста, выберите один из предложенных вариантов."
-            )
+            print("Задачи не найдены.")
+        input("\nНажмите Enter для возврата в меню.")
+        return "main_menu"
+
+
+def main():
+    task_manager = TaskManager()
+    menu_handler = MenuHandler(task_manager)
+    menu_handler.execute()
 
 
 if __name__ == "__main__":
