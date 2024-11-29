@@ -4,16 +4,40 @@ from tabulate import tabulate
 
 
 class Task:
+    """
+    Класс для представления задачи.
+
+    Атрибуты:
+        id (int): Идентификатор задачи.
+        Title (str): Название задачи.
+        Description (str): Описание задачи.
+        Category (str): Категория задачи.
+        Due_date (str): Срок выполнения задачи.
+        Priority (str): Приоритет задачи.
+        Status (str): Статус задачи (по умолчанию "Не выполнена").
+    """
+
     def __init__(
-        self,
-        task_id,
-        title,
-        description,
-        category,
-        due_date,
-        priority,
-        status="Не выполнена",
+            self,
+            task_id,
+            title,
+            description,
+            category,
+            due_date,
+            priority,
+            status="Не выполнена",
     ):
+        """
+        Инициализация объекта задачи.
+
+        :param task_id: Идентификатор задачи.
+        :param title: Название задачи.
+        :param description: Описание задачи.
+        :param category: Категория задачи.
+        :param due_date: Срок выполнения задачи.
+        :param priority: Приоритет задачи.
+        :param status: Статус задачи (по умолчанию "Не выполнена").
+        """
         self.id = task_id
         self.title = title
         self.description = description
@@ -23,11 +47,26 @@ class Task:
         self.status = status
 
     def mark_as_done(self):
+        """
+        Отметить задачу как выполненную.
+
+        :return: None
+        """
         self.status = "Выполнена"
 
     def edit(
-        self, title=None, description=None, category=None, due_date=None, priority=None
+            self, title=None, description=None, category=None, due_date=None, priority=None
     ):
+        """
+        Редактировать задачу.
+
+        :param title: Новое название задачи.
+        :param description: Новое описание задачи.
+        :param category: Новая категория задачи.
+        :param due_date: Новый срок выполнения задачи.
+        :param priority: Новый приоритет задачи.
+        :return: None
+        """
         if title:
             self.title = title
         if description:
@@ -43,6 +82,11 @@ class Task:
         self.status = "Выполнена"
 
     def to_dict(self):
+        """
+        Преобразовать задачу в словарь.
+
+        :return: Словарь, представляющий задачу.
+        """
         return {
             "id": self.id,
             "title": self.title,
@@ -55,6 +99,12 @@ class Task:
 
     @staticmethod
     def from_dict(data):
+        """
+        Создать объект задачи из словаря.
+
+        :param data: Словарь, содержащий данные задачи.
+        :return: Объект задачи.
+        """
         return Task(
             task_id=data["id"],
             title=data["title"],
@@ -67,17 +117,40 @@ class Task:
 
 
 class TaskManager:
+    """
+    Менеджер задач, который управляет списком задач и выполняет операции с ними.
+
+    Атрибуты:
+        file_name (str): Имя файла для хранения данных задач.
+        Tasks (list): Список объектов задач.
+    """
+
     def __init__(self, file_name="tasks.json"):
+        """
+        Инициализация менеджера задач.
+
+        :param file_name: Имя файла для хранения задач (по умолчанию "tasks.json").
+        """
         self.file_name = file_name
         self.tasks = self.load_tasks()
 
     def load_tasks(self):
+        """
+        Загрузить задачи из файла.
+
+        :return: Список задач, загруженных из файла.
+        """
         if os.path.exists(self.file_name):
             with open(self.file_name, "r", encoding="utf-8") as file:
                 return [Task.from_dict(task) for task in json.load(file)]
         return []
 
     def save_tasks(self):
+        """
+        Сохранить задачи в файл.
+
+        :return: None
+        """
         with open(self.file_name, "w", encoding="utf-8") as file:
             json.dump(
                 [task.to_dict() for task in self.tasks],
@@ -87,13 +160,24 @@ class TaskManager:
             )
 
     def get_task_by_id(self, task_id):
+        """
+        Получить задачу по ID.
+
+        :param task_id: Идентификатор задачи.
+        :return: Задача с данным ID или None, если задача не найдена.
+        """
         for task in self.tasks:
             if task.id == task_id:
                 return task
         return None
 
     def show_tasks(self, tasks=None):
-        """Вывод всех задач или переданных задач в виде таблицы."""
+        """
+        Вывести список задач в виде таблицы.
+
+        :param tasks: Список задач для отображения. Если не передано, выводятся все задачи.
+        :return: None
+        """
         if not tasks:
             tasks = self.tasks
 
@@ -115,7 +199,19 @@ class TaskManager:
 
 
 class ViewTasks:
+    """
+    Класс для отображения задач.
+
+    Атрибуты:
+        manager (TaskManager): Менеджер задач.
+    """
+
     def __init__(self, manager):
+        """
+        Инициализация класса просмотра задач.
+
+        :param manager: Менеджер задач.
+        """
         self.manager = manager
 
     def execute(self):
@@ -139,6 +235,11 @@ class ViewTasks:
                     print("Неверный выбор! Попробуйте снова.")
 
     def view_tasks_by_category(self):
+        """
+        Показать задачи по категориям.
+
+        :return: None
+        """
         categories = {task.category for task in self.manager.tasks}
         if categories:
             # Нумерация категорий
@@ -153,7 +254,7 @@ class ViewTasks:
                 category = (
                     list(categories)[int(category_choice) - 1]
                     if category_choice.isdigit()
-                    and 0 < int(category_choice) <= len(categories)
+                       and 0 < int(category_choice) <= len(categories)
                     else category_choice
                 )
                 tasks_in_category = [
@@ -174,10 +275,27 @@ class ViewTasks:
 
 
 class AddTask:
+    """
+    Класс для добавления новой задачи.
+
+    Атрибуты:
+        manager (TaskManager): Менеджер задач.
+    """
+
     def __init__(self, manager):
+        """
+        Инициализация класса добавления задачи.
+
+        :param manager: Менеджер задач.
+        """
         self.manager = manager
 
     def execute(self):
+        """
+        Добавить новую задачу.
+
+        :return: None
+        """
         title = input("\nНазвание задачи: ")
         description = input("Описание задачи: ")
         category = input("Категория: ")
@@ -299,7 +417,7 @@ class DeleteTask:
 
     def execute(self):
         while (
-            True
+                True
         ):  # Повторяем меню удаления до тех пор, пока не выберется правильное действие
             print("\n1. Удаление задачи по ID")
             print("2. Удаление задач по категории")
@@ -343,7 +461,7 @@ class DeleteTask:
                             category = (
                                 list(categories)[int(category_choice) - 1]
                                 if category_choice.isdigit()
-                                and 0 < int(category_choice) <= len(categories)
+                                   and 0 < int(category_choice) <= len(categories)
                                 else category_choice
                             )
                             tasks_in_category = [
@@ -403,7 +521,7 @@ class SearchTask:
                 task
                 for task in result
                 if keyword.lower() == task.title.lower()
-                or keyword.lower() == task.description.lower()
+                   or keyword.lower() == task.description.lower()
             ]
 
         if category:
@@ -417,7 +535,7 @@ class SearchTask:
         return result
 
     def execute(self):
-        while True:  # Цикл, чтобы снова возвращаться в подменю поиска
+        while True:  # Цикл для возврата в подменю
             print("\n1. Поиск по ключевому слову")
             print("2. Поиск по категории")
             print("3. Поиск по статусу")
@@ -446,7 +564,7 @@ class SearchTask:
                         category = (
                             list(categories)[int(category_choice) - 1]
                             if category_choice.isdigit()
-                            and 0 < int(category_choice) <= len(categories)
+                               and 0 < int(category_choice) <= len(categories)
                             else category_choice
                         )
                         result = self.search_tasks(category=category)
@@ -486,8 +604,13 @@ class SearchTask:
 def main():
     manager = TaskManager()
     program_name = r"""
-    ▀█▀ ▄▀█ █▀ █▄▀   █▀▄▀█ ▄▀█ █▄░█ ▄▀█ █▀▀ █▀▀ █▀█
-    ░█░ █▀█ ▄█ █░█   █░▀░█ █▀█ █░▀█ █▀█ █▄█ ██▄ █▀▄
+    ╔════╗╔══╗╔══╗╔╗╔══╗╔╗──╔╗╔══╗╔╗─╔╗╔══╗╔═══╗╔═══╗╔═══╗
+    ╚═╗╔═╝║╔╗║║╔═╝║║║╔═╝║║──║║║╔╗║║╚═╝║║╔╗║║╔══╝║╔══╝║╔═╗║
+    ──║║──║╚╝║║╚═╗║╚╝║──║╚╗╔╝║║╚╝║║╔╗─║║╚╝║║║╔═╗║╚══╗║╚═╝║
+    ──║║──║╔╗║╚═╗║║╔╗║──║╔╗╔╗║║╔╗║║║╚╗║║╔╗║║║╚╗║║╔══╝║╔╗╔╝
+    ──║║──║║║║╔═╝║║║║╚═╗║║╚╝║║║║║║║║─║║║║║║║╚═╝║║╚══╗║║║║─
+    ──╚╝──╚╝╚╝╚══╝╚╝╚══╝╚╝──╚╝╚╝╚╝╚╝─╚╝╚╝╚╝╚═══╝╚═══╝╚╝╚╝─
+
     """
 
     actions = {

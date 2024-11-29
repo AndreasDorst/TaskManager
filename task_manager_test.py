@@ -1,8 +1,7 @@
 import os
 import unittest
-import json
 from unittest.mock import patch
-from task_manager import Task, TaskManager, AddTask, EditTask, DeleteTask, ViewTasks
+from task_manager import Task, TaskManager, ViewTasks
 
 
 class TestTaskManager(unittest.TestCase):
@@ -104,7 +103,7 @@ class TestTaskManager(unittest.TestCase):
         self.assertEqual(manager2.tasks[0].id, 1)
 
     @patch("builtins.input", return_value="1")
-    def test_view_task_menu(self, mock_input):
+    def test_view_task_menu(self, ):
         """Тестирование вызова меню отображения задач"""
         with patch("builtins.print") as mock_print:
             view_tasks = ViewTasks(self.manager)
