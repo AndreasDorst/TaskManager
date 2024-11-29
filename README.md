@@ -60,10 +60,6 @@ pip install tabulate
    pip install -r requirements.txt
    ```
 
-   ```bash
-   pip install tabulate
-   ```
-
 5. Запустите приложение:
 
    ```bash
